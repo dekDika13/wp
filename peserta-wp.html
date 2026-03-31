@@ -1,0 +1,373 @@
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    /* ISOLASI CSS: Semua aturan hanya berlaku di dalam #analgesia-voucher-app */
+    #analgesia-voucher-app {
+        --primary-color: #034b72; 
+        --secondary-color: #002842;
+        --accent-color: #0d8ca8;
+        --text-main: #2d3748;
+        --text-light: #718096;
+        --bg-gray: #f8fafc;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px 0;
+        width: 100%;
+        color: var(--text-main);
+    }
+    
+    #analgesia-voucher-app * { box-sizing: border-box; }
+
+    /* Ukuran Container Portal vs Form */
+    #analgesia-voucher-app .v-portal-container { width: 100%; max-width: 800px; display: none; }
+    #analgesia-voucher-app .v-form-container { width: 100%; max-width: 480px; display: none; margin: 0 auto; }
+
+    /* Hero Banner (Landing Page Feel) */
+    #analgesia-voucher-app .v-hero-banner {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 16px;
+        padding: 40px 30px;
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px rgba(3, 75, 114, 0.2);
+    }
+    #analgesia-voucher-app .v-hero-banner h1 { margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: white;}
+    #analgesia-voucher-app .v-hero-banner p { margin: 0; font-size: 15px; opacity: 0.9; max-width: 600px; margin: 0 auto; line-height: 1.5;}
+
+    /* Section & Grid Event */
+    #analgesia-voucher-app .v-section-title { font-size: 18px; font-weight: 700; margin: 0 0 15px 0; color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;}
+    #analgesia-voucher-app .v-event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px;}
+
+    /* Event Cards */
+    #analgesia-voucher-app .event-card { 
+        border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: white; position: relative; overflow: hidden; text-align: left; cursor: pointer; transition: all 0.3s;
+    }
+    #analgesia-voucher-app .event-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--primary-color); }
+    #analgesia-voucher-app .event-card:hover { border-color: var(--primary-color); box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    #analgesia-voucher-app .event-card h3 { margin: 0 0 8px 0; color: var(--text-main); font-size: 18px;}
+    #analgesia-voucher-app .event-card p { margin: 0; font-size: 13px; color: var(--text-light);}
+
+    /* Disabled/Past Event Card */
+    #analgesia-voucher-app .event-card.past-event { cursor: default; opacity: 0.7; filter: grayscale(100%); }
+    #analgesia-voucher-app .event-card.past-event:hover { border-color: #e2e8f0; box-shadow: none; transform: none; }
+    #analgesia-voucher-app .event-card.past-event::before { background: #cbd5e0; }
+
+    /* V-Card untuk Form/Voucher */
+    #analgesia-voucher-app .v-card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0; }
+
+    /* Form Elements */
+    #analgesia-voucher-app .v-form-group { margin-bottom: 18px; text-align: left; }
+    #analgesia-voucher-app label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px; }
+    #analgesia-voucher-app input, #analgesia-voucher-app select { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.2s; background: white;}
+    #analgesia-voucher-app input:focus, #analgesia-voucher-app select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(3, 75, 114, 0.1); }
+
+    /* Buttons */
+    #analgesia-voucher-app .v-btn { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 10px; transition: 0.2s; font-family: inherit;}
+    #analgesia-voucher-app .v-btn:hover { background: var(--secondary-color); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    #analgesia-voucher-app .v-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+    #analgesia-voucher-app .v-btn-outline { background: transparent !important; color: var(--primary-color); border: 2px solid var(--primary-color); }
+    #analgesia-voucher-app .v-btn-outline:hover { background: var(--bg-gray) !important; }
+
+    /* UI Voucher */
+    #analgesia-voucher-app .voucher-ui { text-align: center; border-radius: 12px; overflow: hidden; background: white;}
+    #analgesia-voucher-app .v-header { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; padding: 25px 20px; }
+    #analgesia-voucher-app .qr-container { display: flex; justify-content: center; margin: 25px 0 15px 0; padding: 15px; transition: 0.3s; }
+    #analgesia-voucher-app .timer-box { background: var(--bg-gray); padding: 15px; border-radius: 8px; margin: 0 20px 20px 20px; border: 1px solid #e2e8f0;}
+    #analgesia-voucher-app .timer-text { font-size: 28px; font-weight: 700; color: #e53e3e; font-family: monospace; letter-spacing: 2px;}
+    #analgesia-voucher-app .info-table { width: 100%; padding: 0 20px; margin: 10px auto 20px auto; text-align: left; font-size: 14px; border-collapse: collapse; }
+    #analgesia-voucher-app .info-table td { padding: 10px 0; border-bottom: 1px solid #edf2f7; }
+
+    /* SweetAlert di frontend */
+    div:where(.swal2-container) { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+</style>
+
+<div id="analgesia-voucher-app">
+
+    <div id="v-loadingSection" style="text-align: center; padding: 50px 20px; width: 100%;">
+        <h3 style="color: var(--text-light); margin:0;">Memuat Portal Event... ⏳</h3>
+    </div>
+
+    <div class="v-portal-container" id="v-portalSection">
+        <div class="v-hero-banner">
+            <h1>Analgesia Event Portal</h1>
+            <p>Dukung gaya hidup aktif Anda dan bergerak bebas tanpa nyeri. Pilih event di bawah ini untuk mengklaim atau mengecek voucher finisher Anda dari Analgesia Pain Clinic.</p>
+        </div>
+
+        <div id="activeSection">
+            <h3 class="v-section-title">🏃‍♂️ Event Berlangsung</h3>
+            <div id="v-activeEventsContainer" class="v-event-grid"></div>
+        </div>
+
+        <div id="pastSection" style="display: none; margin-top: 40px;">
+            <h3 class="v-section-title" style="color: var(--text-light);">🏁 Event Telah Berlalu</h3>
+            <div id="v-pastEventsContainer" class="v-event-grid"></div>
+        </div>
+    </div>
+
+    <div class="v-form-container v-card" id="v-actionSection">
+        
+        <div id="v-formSection">
+            <button onclick="kembaliKePortal()" style="background: none; border: none; color: var(--text-light); font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 20px; padding: 0; display: flex; align-items: center; gap: 5px;">
+                ← Kembali ke Portal
+            </button>
+            <h2 id="v-judulEvent" style="margin-top: 0; margin-bottom: 25px; color: var(--primary-color); text-align: center;">Klaim Voucher</h2>
+            
+            <div class="v-form-group"><label>Nama Lengkap</label><input type="text" id="regNama" placeholder="Sesuai identitas"></div>
+            <div class="v-form-group"><label>Nomor BIB (Dada)</label><input type="text" id="regBib" placeholder="Contoh: 1024"></div>
+            <div class="v-form-group"><label>Nomor WhatsApp</label><input type="number" id="regHp" placeholder="08xxxxxxxxx"></div>
+            <div class="v-form-group">
+                <label>Pilih Lokasi Treatment</label>
+                <select id="regLokasi"><option value="">-- Pilih Lokasi --</option></select>
+            </div>
+            
+            <button class="v-btn" id="btnKlaimUtama" onclick="daftarVoucher()">Klaim Voucher Saya</button>
+            <div style="text-align: center; margin: 15px 0; color: var(--text-light); font-size: 14px;">Atau</div>
+            <button class="v-btn v-btn-outline" id="btnCekLama" onclick="cekVoucherLama()">Cek Voucher Tersimpan</button>
+        </div>
+
+        <div id="v-voucherSection" class="voucher-ui" style="display: none;">
+            <div class="v-header" id="headerVoucher">
+                <h2 style="margin:0; font-size: 20px;" id="judulVoucherWeb">VOUCHER FINISHER</h2>
+                <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Analgesia Medical Clinic</p>
+            </div>
+            
+            <div class="qr-container" id="qrcode"></div>
+            <p style="margin: 0; color: var(--text-light); font-size: 13px;">KODE ID: <strong id="valKode" style="color: var(--text-main);"></strong></p>
+            
+            <div class="timer-box">
+                <div style="font-size: 12px; color: var(--text-light); margin-bottom: 8px; font-weight: 600; text-transform: uppercase;">Sisa Waktu Penukaran</div>
+                <div class="timer-text" id="liveTimer">00:00:00</div>
+                <div id="waktuBatasText" style="font-size: 12px; color: var(--text-main); margin-top: 12px; border-top: 1px dashed #cbd5e0; padding-top: 10px; font-weight: 500;"></div>
+            </div>
+            
+            <table class="info-table">
+                <tr><td style="width: 35%; font-weight: 600; color: var(--text-light);">Nama</td><td style="font-weight: 600;">: <span id="valNama"></span></td></tr>
+                <tr><td style="font-weight: 600; color: var(--text-light);">No. BIB</td><td style="font-weight: 600;">: <span id="valBib"></span></td></tr>
+                <tr><td style="font-weight: 600; color: var(--text-light);">Lokasi</td><td style="font-weight: 700;">: <span id="valLokasi" style="color: var(--primary-color);"></span> <br><a href="#" id="linkGmap" target="_blank" style="font-size:12px; display:none; color: #3182ce; text-decoration: none; margin-top: 4px;">📍 Buka Peta</a></td></tr>
+            </table>
+            
+            <div style="padding: 0 20px 20px 20px;">
+                <button class="v-btn v-btn-outline" style="width: 100%;" id="btnTutupVoucher" onclick="kembaliKeForm()">Tutup Voucher</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ⚠️ Ganti localhost dengan URL production
+    const API_BASE = "https://clinik.agencyta.biz.id/api";
+    
+    let timerInterval; let sseSource = null; 
+    let currentUserBib = ""; let currentUserHp = ""; 
+    let activeEventData = null; 
+    let allEvents = []; 
+
+    function getThemeColor() {
+        const app = document.getElementById('analgesia-voucher-app');
+        return getComputedStyle(app).getPropertyValue('--primary-color').trim() || '#034b72';
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            // Ambil SEMUA event (aktif & nonaktif)
+            const res = await fetch(`${API_BASE}/events`);
+            if (res.ok) { 
+                allEvents = await res.json(); 
+                document.getElementById('v-loadingSection').style.display = 'none';
+                tampilkanPortal();
+            } 
+        } catch (err) { 
+            document.getElementById('v-loadingSection').innerHTML = "<h3 style='color:#e53e3e;'>Gagal terhubung ke server.</h3>"; 
+        }
+    });
+
+    function tampilkanPortal() {
+        const app = document.getElementById('analgesia-voucher-app');
+        app.style.setProperty('--primary-color', '#034b72'); // Reset warna
+        
+        document.getElementById('v-actionSection').style.display = 'none';
+        document.getElementById('v-portalSection').style.display = 'block';
+        
+        const activeContainer = document.getElementById('v-activeEventsContainer');
+        const pastContainer = document.getElementById('v-pastEventsContainer');
+        const pastSection = document.getElementById('pastSection');
+        
+        activeContainer.innerHTML = "";
+        pastContainer.innerHTML = "";
+        
+        const activeEvents = allEvents.filter(e => e.is_active);
+        const pastEvents = allEvents.filter(e => !e.is_active);
+
+        // Render Active
+        if (activeEvents.length > 0) {
+            activeEvents.forEach(ev => {
+                const batasBagus = ev.batas_waktu_claim.replace("T", " ");
+                activeContainer.innerHTML += `
+                    <div class="event-card" onclick='pilihEvent(${JSON.stringify(ev)})'>
+                        <h3>${ev.judul}</h3>
+                        <p>⏱️ Batas: ${batasBagus} WITA</p>
+                    </div>`;
+            });
+        } else {
+            activeContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; padding: 20px; border: 1px dashed #cbd5e0; border-radius: 8px; text-align: center;">
+                    <p style="color: var(--text-light); margin: 0; font-weight: 500;">Belum ada event lari yang sedang berlangsung saat ini. Pantau terus informasi selanjutnya!</p>
+                </div>`;
+        }
+
+        // Render Past
+        if (pastEvents.length > 0) {
+            pastSection.style.display = 'block';
+            pastEvents.forEach(ev => {
+                pastContainer.innerHTML += `
+                    <div class="event-card past-event" onclick="infoPastEvent()">
+                        <h3>${ev.judul}</h3>
+                        <p>🏁 Event telah selesai</p>
+                    </div>`;
+            });
+        } else {
+            pastSection.style.display = 'none';
+        }
+    }
+
+    function infoPastEvent() {
+        Swal.fire({ icon: 'info', title: 'Event Selesai', text: 'Event ini telah berakhir dan penukaran voucher sudah ditutup.', confirmButtonColor: getThemeColor() });
+    }
+
+    function pilihEvent(ev) {
+        activeEventData = ev;
+        document.getElementById('v-portalSection').style.display = 'none';
+        document.getElementById('v-actionSection').style.display = 'block';
+        document.getElementById('v-formSection').style.display = 'block';
+        terapkanTemaEvent(ev);
+    }
+
+    function kembaliKePortal() {
+        document.getElementById('regNama').value = ""; document.getElementById('regBib').value = ""; document.getElementById('regHp').value = "";
+        activeEventData = null;
+        document.getElementById('v-voucherSection').style.display = 'none';
+        tampilkanPortal();
+    }
+
+    function terapkanTemaEvent(ev) {
+        document.getElementById('v-judulEvent').innerText = ev.judul; 
+        document.getElementById('judulVoucherWeb').innerText = ev.judul;
+        
+        const app = document.getElementById('analgesia-voucher-app');
+        if (ev.tone_color) { app.style.setProperty('--primary-color', ev.tone_color); }
+        
+        const selectLokasi = document.getElementById('regLokasi'); 
+        selectLokasi.innerHTML = `<option value="">-- Pilih Lokasi Pengambilan --</option>`;
+        if(ev.cabang_lokasi) ev.cabang_lokasi.forEach(cabang => { 
+            selectLokasi.innerHTML += `<option value="${cabang.nama}">${cabang.nama}</option>`; 
+        });
+    }
+
+    async function daftarVoucher() {
+        const payload = { 
+            nama_lengkap: document.getElementById('regNama').value, 
+            nomor_bib: document.getElementById('regBib').value, 
+            nomor_hp: document.getElementById('regHp').value, 
+            lokasi_treatment: document.getElementById('regLokasi').value,
+            event_id: activeEventData.id
+        };
+        
+        if (!payload.nama_lengkap || !payload.nomor_bib || !payload.nomor_hp || !payload.lokasi_treatment) {
+            return Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Harap lengkapi semua kolom pendaftaran!', confirmButtonColor: getThemeColor() });
+        }
+        
+        const btn = document.getElementById('btnKlaimUtama'); btn.innerText = "Memproses..."; btn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_BASE}/claim`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json(); 
+            if (res.ok) { 
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Voucher disiapkan...', showConfirmButton: false, timer: 1500 });
+                tarikDataVoucher(payload.nomor_bib, payload.nomor_hp); 
+            } else { 
+                Swal.fire({ icon: 'error', title: 'Pendaftaran Ditolak', text: data.error, confirmButtonColor: getThemeColor() });
+                btn.innerText = "Klaim Voucher Saya"; btn.disabled = false;
+            }
+        } catch (err) { 
+            Swal.fire({ icon: 'error', title: 'Koneksi Terputus', text: 'Gagal terhubung ke server.', confirmButtonColor: getThemeColor() });
+            btn.innerText = "Klaim Voucher Saya"; btn.disabled = false;
+        }
+    }
+
+    function cekVoucherLama() {
+        const bib = document.getElementById('regBib').value; const hp = document.getElementById('regHp').value;
+        if (!bib || !hp) { return Swal.fire({ icon: 'info', title: 'Perhatian', text: 'Isi Nomor BIB dan WhatsApp untuk mengecek!', confirmButtonColor: getThemeColor() }); }
+        tarikDataVoucher(bib, hp);
+    }
+
+    async function tarikDataVoucher(bib, hp) {
+        try {
+            const res = await fetch(`${API_BASE}/voucher?bib=${bib}&hp=${hp}`); const data = await res.json();
+            if (res.ok) { currentUserBib = bib; currentUserHp = hp; tampilkanVoucher(data); } 
+            else { Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: data.error, confirmButtonColor: getThemeColor() }); }
+        } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal memuat data.', confirmButtonColor: getThemeColor() }); }
+    }
+
+    function tampilkanVoucher(data) {
+        document.getElementById('v-formSection').style.display = 'none'; document.getElementById('v-voucherSection').style.display = 'block';
+        document.getElementById('valNama').innerText = data.nama; document.getElementById('valBib').innerText = data.bib; 
+        document.getElementById('valKode').innerText = data.kode_voucher; document.getElementById('valLokasi').innerText = data.lokasi_treatment;
+        
+        const linkEl = document.getElementById('linkGmap'); linkEl.style.display = "none";
+        if(activeEventData && activeEventData.cabang_lokasi) { 
+            const lokasiDipilih = activeEventData.cabang_lokasi.find(c => c.nama === data.lokasi_treatment); 
+            if(lokasiDipilih && lokasiDipilih.gmap) { linkEl.href = lokasiDipilih.gmap; linkEl.style.display = "inline-block"; } 
+        }
+        
+        const qrContainer = document.getElementById('qrcode'); qrContainer.innerHTML = ""; 
+        new QRCode(qrContainer, { text: data.kode_voucher, width: 160, height: 160, colorDark : "#2d3748", colorLight : "#ffffff" });
+        
+        clearInterval(timerInterval); jalankanTimer(data.expired_at, data.is_redeemed); aktifkanLiveUpdatePeserta();
+    }
+
+    function aktifkanLiveUpdatePeserta() {
+        if (sseSource) sseSource.close();
+        sseSource = new EventSource(`${API_BASE}/peserta/stream`);
+        sseSource.onmessage = function (event) { if (event.data === "refresh") { if (currentUserBib && currentUserHp) { refreshDataSenyap(currentUserBib, currentUserHp); } } };
+    }
+
+    async function refreshDataSenyap(bib, hp) {
+        try { const res = await fetch(`${API_BASE}/voucher?bib=${bib}&hp=${hp}`); const data = await res.json(); if (res.ok) { clearInterval(timerInterval); jalankanTimer(data.expired_at, data.is_redeemed); } } catch (err) {}
+    }
+
+    function jalankanTimer(waktuExpired, isRedeemed) {
+        const elemenTimer = document.getElementById('liveTimer'); const qrElement = document.getElementById('qrcode');
+        const elemenWaktuText = document.getElementById('waktuBatasText');
+
+        let strWaktu = waktuExpired; if (!strWaktu.includes("+")) strWaktu += "+08:00";
+        const targetDate = new Date(strWaktu);
+        
+        const opsiFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        elemenWaktuText.innerText = "Berlaku hingga:\n" + targetDate.toLocaleDateString('id-ID', opsiFormat) + " WITA";
+
+        if (isRedeemed) { 
+            elemenTimer.innerText = "SUDAH DIPAKAI"; elemenTimer.style.color = "#e53e3e"; qrElement.style.opacity = "0.2"; return; 
+        } else { 
+            qrElement.style.opacity = "1"; elemenTimer.style.color = "var(--primary-color)";
+        }
+
+        timerInterval = setInterval(() => {
+            const selisih = targetDate.getTime() - new Date().getTime();
+            if (selisih < 0) { clearInterval(timerInterval); elemenTimer.innerText = "EXPIRED"; elemenTimer.style.color = "#e53e3e"; qrElement.style.opacity = "0.2"; return; }
+            const jam = Math.floor(selisih / (1000 * 60 * 60)); const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60)); const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+            elemenTimer.innerText = `${String(jam).padStart(2, '0')}:${String(menit).padStart(2, '0')}:${String(detik).padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function kembaliKeForm() { 
+        const btn = document.getElementById('btnKlaimUtama'); btn.innerText = "Klaim Voucher Saya"; btn.disabled = false;
+        document.getElementById('v-formSection').style.display = 'block'; document.getElementById('v-voucherSection').style.display = 'none'; 
+        clearInterval(timerInterval); if (sseSource) { sseSource.close(); sseSource = null; } 
+    }
+</script>
