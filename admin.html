@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Event Lari - Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box; }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        input, select { padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 5px; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background: #007bff; }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; }
+        .btn-danger { background: #dc3545; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #ddd; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .tab.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .badge-green { background: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+        .badge-red { background: #dc3545; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+        .badge-gray { background: #6c757d; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;}
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 100%; max-width: 650px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;}
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        label { font-weight: bold; color: #555; display: block; margin-bottom: 5px; font-size: 13px; }
+        .cabang-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .check-group { display: flex; gap: 10px; align-items: center; margin-bottom: 5px;}
+        .check-group input[type="checkbox"] { margin: 0; width: auto; transform: scale(1.2); cursor: pointer;}
+        .check-group label { margin: 0; font-weight: normal; cursor: pointer;}
+        div:where(.swal2-container) { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; }
+        .admin-footer { text-align: center; padding-top: 20px; margin-top: auto; font-size: 13px; color: #6c757d; }
+        .admin-footer a { color: inherit; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .admin-footer a:hover { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" id="loginSection" style="max-width: 400px; margin: auto;">
+            <h2 style="text-align: center;">🔐 Login Petugas</h2>
+            <input type="text" id="username" placeholder="Username" style="width:100%;">
+            <input type="password" id="password" placeholder="Password" style="width:100%;">
+            <button class="btn btn-primary" style="width:100%;" onclick="loginKeGolang()">Masuk</button>
+        </div>
+
+        <div id="mainSection" style="display: none;">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('tab-scanner', this)">📷 Scanner</div>
+                <div class="tab" onclick="switchTab('tab-monitor', this)">📊 Live Monitor</div>
+                <div class="tab" onclick="switchTab('tab-event', this)">⚙️ Daftar Event</div>
+                <button class="btn btn-danger" style="margin-left:auto;" onclick="logout()">Logout</button>
+            </div>
+
+            <div id="tab-scanner" class="card tab-content active" style="max-width: 500px; margin: auto;">
+                <div id="reader" style="width: 100%; display: none; margin-bottom: 15px;"></div>
+                <button class="btn btn-primary" id="btnStartScan" style="width: 100%;" onclick="mulaiScanner()">Buka Kamera (Scan QR)</button>
+                <button class="btn btn-danger" id="btnStopScan" style="width: 100%; display: none;" onclick="matikanScanner()">Matikan Kamera</button>
+                <hr style="margin: 20px 0;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="inputScan" placeholder="Ketik Kode / BIB..." style="flex: 1; margin: 0;">
+                    <button class="btn btn-primary" onclick="cekKeGolangManual()" style="margin: 0;">Cek</button>
+                </div>
+                <div id="hasilScan" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px; border: 1px solid #ddd;">
+                    <h3 id="resNama" style="margin-top:0; color: #007bff;">-</h3>
+                    <p>BIB: <strong id="resBib">-</strong></p>
+                    <p>Lokasi: <strong id="resLokasi" style="color: #dc3545;">-</strong></p>
+                    <p>Status: <span id="resStatus" style="font-weight:bold; font-size:18px;">-</span></p>
+                    <button id="btnRedeem" class="btn btn-success" style="width:100%; margin-top:10px;" onclick="tandaiDipakai()">✅ Tandai Terpakai</button>
+                </div>
+            </div>
+
+            <div id="tab-monitor" class="card tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <h3 style="margin: 0;">🟢 Live Monitor</h3>
+                        <select id="filterEvent" style="margin: 0; min-width: 200px; background: #f8f9fa; font-weight: bold;" onchange="applyFilterTabel()">
+                            <option value="ALL">Lihat Semua Event</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="exportExcel()">📥 Excel</button>
+                        <button class="btn btn-danger" onclick="exportPDF()">📥 PDF</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table id="dataTable" style="min-width: 900px;">
+                        <thead>
+                            <tr><th>No</th><th>Nama Event</th><th>Nama Peserta</th><th>BIB / HP</th><th>Lokasi</th><th>Kode Voucher</th><th>Status</th><th style="width: 120px;">Aksi</th></tr>
+                        </thead>
+                        <tbody id="tableBody"><tr><td colspan="8" style="text-align: center;">Memuat data...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-event" class="card tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">⚙️ Manajemen Event</h3>
+                    <button class="btn btn-primary" onclick="bukaModalEvent(null)">+ Buat Event Baru</button>
+                </div>
+                <table style="margin-top: 15px;">
+                    <thead><tr><th>Status</th><th>Nama Event</th><th>Waktu Klaim</th><th>Format Voucher</th><th style="width: 280px;">Aksi</th></tr></thead>
+                    <tbody id="eventTableBody"><tr><td colspan="5" style="text-align: center;">Memuat data event...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalFormEvent" class="modal">
+        <div class="modal-content">
+            <h3 id="modalEventTitle" style="margin-top: 0; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Buat Event Baru</h3>
+            <input type="hidden" id="evId">
+            <div class="form-grid">
+                <div><label>Nama Event (Internal)</label><input type="text" id="evNama" style="width: 100%;"></div>
+                <div><label>Judul Tampil di Web</label><input type="text" id="evJudul" style="width: 100%;"></div>
+                
+                <div><label>Waktu MULAI Klaim</label><input type="datetime-local" id="evStartWaktu" style="width: 100%;"></div>
+                <div><label>Waktu TUTUP Klaim</label><input type="datetime-local" id="evBatasWaktu" style="width: 100%;"></div>
+            </div>
+            
+            <div class="form-grid">
+                <div><label>Warna Tema Utama</label><input type="color" id="evWarna" value="#0052D4" style="width: 100%; height: 40px; padding: 0; border: none; cursor: pointer;"></div>
+                <div><label>URL Gambar Background</label><input type="text" id="evBg" style="width: 100%;"></div>
+            </div>
+            
+            <div style="background: #eef2f5; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <h4 style="margin: 0 0 10px 0;">🛡️ Fitur Peserta & Validasi</h4>
+                
+                <div class="check-group" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+                    <input type="checkbox" id="evReqBib" checked>
+                    <label for="evReqBib"><b>Wajibkan Nomor BIB</b> <br><small style="color: #666;">(Jangan dicek jika event umum/jalan santai tanpa BIB dada)</small></label>
+                </div>
+
+                <div class="check-group" style="margin-bottom: 10px;">
+                    <input type="checkbox" id="evReqVal" onchange="toggleValidasiOptions()">
+                    <label for="evReqVal"><b>Wajibkan Validasi Data Peserta</b> (Tolak jika tidak terdaftar di Excel)</label>
+                </div>
+                <div id="validasiOptions" style="display: none; padding-left: 25px; border-left: 3px solid #007bff;">
+                    <div style="font-size: 12px; color: #555; margin-bottom: 8px;">Pilih data apa saja yang wajib cocok dengan data Excel:</div>
+                    <div class="check-group"><input type="checkbox" id="evValNama"><label for="evValNama">Cek Nama Lengkap</label></div>
+                    <div class="check-group" id="optValBib"><input type="checkbox" id="evValBib"><label for="evValBib">Cek Nomor BIB</label></div>
+                    <div class="check-group"><input type="checkbox" id="evValHp"><label for="evValHp">Cek Nomor HP/WA</label></div>
+                </div>
+            </div>
+
+            <h4 style="margin: 15px 0 5px 0;">⚙️ Format Kode Voucher</h4>
+            <div class="form-grid">
+                <div><label>Prefix (Awalan)</label><input type="text" id="evPrefix" placeholder="RUN-" style="width: 100%;"></div>
+                <div><label>Tipe Generate Nomor</label>
+                    <select id="evSeq" style="width: 100%;">
+                        <option value="false">Acak / Random (0000-9999)</option>
+                        <option value="true">Berurutan (0001, 0002, dst)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h4 style="margin: 15px 0 5px 0;">📍 Daftar Cabang</h4>
+            <div id="cabangContainer"></div>
+            <button class="btn btn-warning btn-sm" onclick="tambahBarisCabang('', '')">+ Tambah Cabang</button>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn" style="background: #ccc; color: #333;" onclick="tutupModalEvent()">Batal</button>
+                <button class="btn btn-primary" onclick="simpanEvent()">💾 Simpan Event</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalWhitelist" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0;">👥 Kelola Peserta Valid: <span id="wlEventNama" style="color: #007bff;"></span></h3>
+                <button class="btn btn-danger btn-sm" onclick="tutupModalWhitelist()">Tutup</button>
+            </div>
+            
+            <input type="hidden" id="wlEventId">
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd;">
+                <h4 style="margin: 0 0 10px 0;">📥 Upload dari Excel/CSV</h4>
+                <p style="font-size: 12px; color: #666; margin-top: 0;">Pastikan tabel memiliki judul kolom: <b>Nama</b>, <b>BIB</b>, dan <b>HP</b> pada baris pertama.</p>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="wlExcelFile" accept=".xlsx, .xls, .csv" style="margin: 0; flex: 1; padding: 5px;">
+                    <button class="btn btn-success" onclick="prosesUploadExcel()" style="margin: 0;">Upload Data</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: end;">
+                <div style="flex: 1;"><label>Nama Lengkap</label><input type="text" id="wlInputNama" style="margin:0;"></div>
+                <div style="width: 100px;"><label>BIB</label><input type="text" id="wlInputBib" style="margin:0;"></div>
+                <div style="width: 150px;"><label>No HP</label><input type="text" id="wlInputHp" style="margin:0;"></div>
+                <button class="btn btn-primary" onclick="tambahPesertaManual()" style="margin:0; height: 40px;">+ Tambah Manual</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <h4 style="margin: 0;">Daftar Peserta di Database</h4>
+                <button class="btn btn-danger btn-sm" onclick="hapusSemuaWhitelist()">🗑️ Hapus Semua Data</button>
+            </div>
+            
+            <div style="max-height: 300px; overflow-y: auto; margin-top: 10px; border: 1px solid #ddd;">
+                <table style="margin-top: 0;">
+                    <thead style="position: sticky; top: 0; z-index: 1;"><tr><th>No</th><th>Nama</th><th>BIB</th><th>HP</th><th>Aksi</th></tr></thead>
+                    <tbody id="wlTableBody"><tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditWaktu" class="modal">
+        <div style="background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 400px;">
+            <h3 style="margin-top: 0;">⏳ Edit Batas Waktu</h3>
+            <input type="datetime-local" id="inputWaktuBaru" style="width: 100%; padding: 12px; margin-bottom: 20px;">
+            <input type="hidden" id="hiddenVoucherId">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn" style="background: #ccc; color: #333;" onclick="tutupModalWaktu()">Batal</button>
+                <button class="btn btn-primary" onclick="simpanWaktuBaru()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-footer">
+        &copy; 2026 Analgesia Pain Clinic. All rights reserved.<br>
+        <span style="font-size: 11px; opacity: 0.8;">System developed by <a href="https://agencyta.biz.id" target="_blank">Kadek Dika Rama Suryadi</a></span>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8080/api/admin";
+        let globalDataDashboard = []; let globalDataEvent = []; let html5QrCode = null;
+
+        window.onload = () => {
+            if (localStorage.getItem("jwt_token")) {
+                document.getElementById('loginSection').style.display = 'none'; document.getElementById('mainSection').style.display = 'block';
+                tarikDaftarEventList(); tarikDataDashboard(); aktifkanLiveStreamSSE();
+                setInterval(() => { if (globalDataDashboard.length > 0) applyFilterTabel(); }, 10000);
+                
+                document.getElementById('evReqBib').addEventListener('change', function() {
+                    document.getElementById('optValBib').style.display = this.checked ? 'flex' : 'none';
+                    if(!this.checked) document.getElementById('evValBib').checked = false;
+                });
+            }
+        };
+
+        function getAuthHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem("jwt_token"), 'Content-Type': 'application/json' }; }
+        function switchTab(tabId, el) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); el.classList.add('active'); document.getElementById(tabId).classList.add('active'); }
+
+        async function tarikDaftarEventList() {
+            try {
+                const res = await fetch(`${API_BASE}/events`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    globalDataEvent = await res.json();
+                    const tbody = document.getElementById('eventTableBody'); tbody.innerHTML = "";
+                    const filter = document.getElementById('filterEvent'); filter.innerHTML = '<option value="ALL">Lihat Semua Event</option>';
+                    if(!globalDataEvent || globalDataEvent.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Belum ada event.</td></tr>"; return; }
+
+                    globalDataEvent.forEach(ev => {
+                        filter.innerHTML += `<option value="${ev.nama}">${ev.nama}</option>`;
+                        let stat = ev.is_active ? `<span class="badge-green">AKTIF</span>` : `<span class="badge-gray">NONAKTIF</span>`;
+                        let btnAktif = ev.is_active ? `<button class="btn btn-danger btn-sm" onclick="ubahStatusEvent('${ev.id}', false)">Off</button>` : `<button class="btn btn-success btn-sm" onclick="ubahStatusEvent('${ev.id}', true)">On</button>`;
+                        
+                        let startTampil = ev.start_waktu_claim ? ev.start_waktu_claim.replace("T", " ") : "-";
+                        let batasTampil = ev.batas_waktu_claim ? ev.batas_waktu_claim.replace("T", " ") : "-";
+                        let infoBib = ev.is_require_bib ? "BIB Wajib" : "<span style='color:orange;'>Tanpa BIB</span>";
+
+                        tbody.innerHTML += `<tr>
+                            <td>${stat}</td>
+                            <td><strong>${ev.nama}</strong> <br> <small style="color:${ev.require_validation ? 'green' : 'gray'}">${ev.require_validation ? '🛡️ Validasi Aktif' : '🔓 Bebas Klaim'}</small></td>
+                            <td style="font-size:12px;">Mulai: ${startTampil}<br>Tutup: ${batasTampil}</td>
+                            <td><code>${ev.voucher_prefix}****</code><br><small>${infoBib}</small></td>
+                            <td>
+                                ${btnAktif} 
+                                <button class="btn btn-info btn-sm" onclick="bukaModalWhitelist('${ev.id}', '${ev.nama}')">👥 Peserta</button> 
+                                <button class="btn btn-warning btn-sm" onclick='bukaModalEvent(${JSON.stringify(ev)})'>Edit</button> 
+                                <button class="btn btn-danger btn-sm" onclick="hapusEvent('${ev.id}')">Hapus</button>
+                            </td>
+                        </tr>`;
+                    });
+                }
+            } catch (err) { console.log(err); }
+        }
+
+        function toggleValidasiOptions() {
+            const isChecked = document.getElementById('evReqVal').checked;
+            document.getElementById('validasiOptions').style.display = isChecked ? 'block' : 'none';
+        }
+
+        function bukaModalEvent(ev) {
+            document.getElementById('cabangContainer').innerHTML = "";
+            if (ev) {
+                document.getElementById('modalEventTitle').innerText = "Edit Event";
+                document.getElementById('evId').value = ev.id; document.getElementById('evNama').value = ev.nama; document.getElementById('evJudul').value = ev.judul; document.getElementById('evBg').value = ev.background; document.getElementById('evWarna').value = ev.tone_color; document.getElementById('evPrefix').value = ev.voucher_prefix; document.getElementById('evSeq').value = ev.is_sequential.toString();
+                if(ev.start_waktu_claim) document.getElementById('evStartWaktu').value = ev.start_waktu_claim.slice(0, 16);
+                if(ev.batas_waktu_claim) document.getElementById('evBatasWaktu').value = ev.batas_waktu_claim.slice(0, 16);
+                
+                document.getElementById('evReqBib').checked = ev.is_require_bib;
+                document.getElementById('optValBib').style.display = ev.is_require_bib ? 'flex' : 'none';
+
+                document.getElementById('evReqVal').checked = ev.require_validation;
+                document.getElementById('evValNama').checked = ev.val_nama;
+                document.getElementById('evValBib').checked = ev.val_bib;
+                document.getElementById('evValHp').checked = ev.val_hp;
+                toggleValidasiOptions();
+
+                if(ev.cabang_lokasi) ev.cabang_lokasi.forEach(c => tambahBarisCabang(c.nama, c.gmap));
+            } else {
+                document.getElementById('modalEventTitle').innerText = "Buat Event Baru";
+                document.getElementById('evId').value = ""; document.getElementById('evNama').value = ""; document.getElementById('evJudul').value = ""; document.getElementById('evBg').value = ""; document.getElementById('evWarna').value = "#0052D4"; document.getElementById('evPrefix').value = "RUN-"; document.getElementById('evSeq').value = "false"; 
+                document.getElementById('evStartWaktu').value = ""; document.getElementById('evBatasWaktu').value = "";
+                
+                document.getElementById('evReqBib').checked = true;
+                document.getElementById('optValBib').style.display = 'flex';
+
+                document.getElementById('evReqVal').checked = false;
+                document.getElementById('evValNama').checked = false; document.getElementById('evValBib').checked = true; document.getElementById('evValHp').checked = false;
+                toggleValidasiOptions();
+
+                tambahBarisCabang('', '');
+            }
+            document.getElementById('modalFormEvent').style.display = 'flex';
+        }
+
+        function tutupModalEvent() { document.getElementById('modalFormEvent').style.display = 'none'; }
+        function tambahBarisCabang(nama, gmap) {
+            const div = document.createElement('div'); div.className = 'cabang-item';
+            div.innerHTML = `<input type="text" placeholder="Nama Cabang" class="cb-nama" value="${nama}" style="flex: 1; margin:0;"><input type="text" placeholder="Link GMap" class="cb-gmap" value="${gmap}" style="flex: 2; margin:0;"><button class="btn btn-danger" style="margin:0;" onclick="this.parentElement.remove()">X</button>`;
+            document.getElementById('cabangContainer').appendChild(div);
+        }
+
+        async function simpanEvent() {
+            const lokasi = [];
+            document.querySelectorAll('.cabang-item').forEach(item => { const nama = item.querySelector('.cb-nama').value; const gmap = item.querySelector('.cb-gmap').value; if (nama) lokasi.push({ nama, gmap }); });
+            
+            const payload = { 
+                id: document.getElementById('evId').value, nama: document.getElementById('evNama').value, judul: document.getElementById('evJudul').value, 
+                start_waktu_claim: document.getElementById('evStartWaktu').value, batas_waktu_claim: document.getElementById('evBatasWaktu').value, 
+                background: document.getElementById('evBg').value, tone_color: document.getElementById('evWarna').value, voucher_prefix: document.getElementById('evPrefix').value, is_sequential: document.getElementById('evSeq').value === "true", cabang_lokasi: lokasi,
+                is_require_bib: document.getElementById('evReqBib').checked, require_validation: document.getElementById('evReqVal').checked,
+                val_nama: document.getElementById('evValNama').checked, val_bib: document.getElementById('evValBib').checked, val_hp: document.getElementById('evValHp').checked
+            };
+            
+            if(!payload.nama || !payload.judul || !payload.start_waktu_claim || !payload.batas_waktu_claim || lokasi.length === 0) return Swal.fire('Data Belum Lengkap', 'Lengkapi semua info waktu dan minimal 1 cabang!', 'warning');
+            
+            try {
+                const res = await fetch(`${API_BASE}/event`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
+                if(res.ok) { Swal.fire('Berhasil!', 'Event berhasil disimpan.', 'success'); tutupModalEvent(); tarikDaftarEventList(); } else { Swal.fire('Gagal!', 'Gagal menyimpan event.', 'error'); }
+            } catch(e) { Swal.fire('Error', 'Server error.', 'error'); }
+        }
+
+        async function hapusEvent(id) { 
+            const result = await Swal.fire({ title: 'Yakin hapus event ini?', text: "Data voucher yang terkait mungkin akan hilang.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, Hapus!' });
+            if(result.isConfirmed) { await fetch(`${API_BASE}/event/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); Swal.fire('Terhapus!', 'Event telah dihapus.', 'success'); tarikDaftarEventList(); }
+        }
+        
+        async function ubahStatusEvent(id, status) { 
+            try { await fetch(`${API_BASE}/event/${id}/status`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ is_active: status }) }); tarikDaftarEventList(); Swal.fire({title: 'Status Diperbarui', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000}); } catch(e) { Swal.fire('Error', 'Gagal update status', 'error'); } 
+        }
+
+        // --- SISTEM WHITELIST (VALIDASI PESERTA) ---
+        function bukaModalWhitelist(eventId, eventName) { document.getElementById('wlEventId').value = eventId; document.getElementById('wlEventNama').innerText = eventName; document.getElementById('modalWhitelist').style.display = 'flex'; tarikDataWhitelist(); }
+        function tutupModalWhitelist() { document.getElementById('modalWhitelist').style.display = 'none'; }
+
+        async function tarikDataWhitelist() {
+            const id = document.getElementById('wlEventId').value;
+            try {
+                const res = await fetch(`${API_BASE}/event/${id}/whitelist`, { headers: getAuthHeaders() });
+                if(res.ok) {
+                    const data = await res.json();
+                    const tbody = document.getElementById('wlTableBody'); tbody.innerHTML = "";
+                    if(!data || data.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Belum ada data peserta valid.</td></tr>"; return; }
+                    data.forEach((w, i) => { tbody.innerHTML += `<tr><td>${i+1}</td><td>${w.nama_lengkap}</td><td>${w.nomor_bib}</td><td>${w.nomor_hp}</td><td><button class="btn btn-danger btn-sm" onclick="hapusWhitelistSatu('${w.id}')">X</button></td></tr>`; });
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        async function tambahPesertaManual() {
+            const id = document.getElementById('wlEventId').value;
+            const payload = [{ nama_lengkap: document.getElementById('wlInputNama').value, nomor_bib: document.getElementById('wlInputBib').value, nomor_hp: document.getElementById('wlInputHp').value }];
+            if(!payload[0].nama_lengkap) return Swal.fire('Peringatan', 'Nama wajib diisi!', 'warning');
+            try {
+                const res = await fetch(`${API_BASE}/event/${id}/whitelist`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
+                if(res.ok) { document.getElementById('wlInputNama').value = ""; document.getElementById('wlInputBib').value = ""; document.getElementById('wlInputHp').value = ""; Swal.fire({title: 'Ditambahkan', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000}); tarikDataWhitelist(); } else Swal.fire('Gagal', 'Gagal menyimpan data.', 'error');
+            } catch(e) { Swal.fire('Error', 'Server error.', 'error'); }
+        }
+
+        function prosesUploadExcel() {
+            const fileInput = document.getElementById('wlExcelFile');
+            if(!fileInput.files.length) return Swal.fire('Perhatian', 'Pilih file Excel terlebih dahulu!', 'info');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonArray = XLSX.utils.sheet_to_json(sheet);
+                
+                const payload = jsonArray.map(r => ({
+                    nama_lengkap: String(r['Nama'] || r['Nama Lengkap'] || r['NAMA'] || r['nama'] || ''),
+                    nomor_bib: String(r['BIB'] || r['Nomor BIB'] || r['bib'] || ''),
+                    nomor_hp: String(r['HP'] || r['Nomor HP'] || r['No HP'] || r['hp'] || '')
+                })).filter(r => r.nama_lengkap !== "" || r.nomor_hp !== ""); 
+                
+                if(payload.length === 0) return Swal.fire('Data Kosong', 'Data kosong atau format judul kolom salah (Harus ada Nama, BIB, HP).', 'error');
+                kirimBulkWhitelist(payload);
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        async function kirimBulkWhitelist(payload) {
+            const id = document.getElementById('wlEventId').value;
+            const batchSize = 500; let successCount = 0;
+            Swal.fire({ title: 'Mengupload Data...', html: 'Mohon tunggu, jangan tutup halaman ini.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            try {
+                for (let i = 0; i < payload.length; i += batchSize) {
+                    const batch = payload.slice(i, i + batchSize);
+                    const res = await fetch(`${API_BASE}/event/${id}/whitelist`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(batch) });
+                    if (res.ok) { successCount += batch.length; } else { throw new Error("Gagal"); }
+                }
+                Swal.fire({ icon: 'success', title: 'Selesai!', text: `${successCount} baris data diproses.`, confirmButtonColor: '#007bff' });
+                document.getElementById('wlExcelFile').value = ""; tarikDataWhitelist(); 
+            } catch(e) { Swal.fire('Error', 'Terjadi kesalahan saat mengupload data.', 'error'); }
+        }
+
+        async function hapusWhitelistSatu(wid) {
+            const result = await Swal.fire({ title: 'Hapus peserta ini?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, Hapus!' });
+            if(result.isConfirmed) { await fetch(`${API_BASE}/event/whitelist/${wid}`, { method: 'DELETE', headers: getAuthHeaders() }); tarikDataWhitelist(); }
+        }
+        async function hapusSemuaWhitelist() {
+            const id = document.getElementById('wlEventId').value;
+            const result = await Swal.fire({ title: 'YAKIN HAPUS SEMUA DATA PESERTA DI EVENT INI?', text: "Tindakan ini tidak bisa dibatalkan!", icon: 'error', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, Hapus Semua!' });
+            if(result.isConfirmed) { await fetch(`${API_BASE}/event/${id}/whitelist`, { method: 'DELETE', headers: getAuthHeaders() }); Swal.fire('Terhapus!', 'Semua data whitelist telah dikosongkan.', 'success'); tarikDataWhitelist(); }
+        }
+
+        // --- DASHBOARD & SSE ---
+        function aktifkanLiveStreamSSE() { const sse = new EventSource(`${API_BASE}/stream?token=${localStorage.getItem("jwt_token")}`); sse.onmessage = (e) => { if (e.data === "refresh") tarikDataDashboard(); }; }
+        async function tarikDataDashboard() { try { const res = await fetch(`${API_BASE}/dashboard`, { headers: getAuthHeaders() }); if (res.ok) { globalDataDashboard = await res.json(); applyFilterTabel(); } else if (res.status === 401) logout(); } catch (err) { console.error(err); } }
+        function getFilteredData() { const sel = document.getElementById('filterEvent').value; if (sel === "ALL") return globalDataDashboard; return globalDataDashboard.filter(row => row.event_nama === sel); }
+        function applyFilterTabel() { renderTable(getFilteredData()); }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody'); tbody.innerHTML = "";
+            if (!data || data.length === 0) { tbody.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Belum ada data.</td></tr>"; return; }
+            data.forEach((row, index) => {
+                let strExp = row.expired_at; if(!strExp.includes("+")) strExp += "+08:00";
+                const isExpired = new Date() > new Date(strExp);
+                let statusBadge = row.is_redeemed ? `<span class="badge-red">TERPAKAI</span>` : (isExpired ? `<span class="badge-gray">EXPIRED</span>` : `<span class="badge-green">VALID</span>`);
+                tbody.innerHTML += `<tr><td>${index + 1}</td><td><span style="background:#eef2f5; padding: 3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">${row.event_nama}</span></td><td><strong>${row.nama_lengkap}</strong></td><td>BIB: ${row.nomor_bib}<br><small>${row.nomor_hp}</small></td><td><span style="background:#e2e3e5; padding:2px 6px; border-radius:4px; font-weight:bold;">${row.lokasi_treatment}</span></td><td><code>${row.kode_voucher}</code><br><small>${row.expired_at.replace("T", " ")}</small></td><td>${statusBadge}</td><td><button class="btn btn-warning btn-sm" style="width:100%; margin-bottom:5px;" onclick="bukaModalEditWaktu('${row.voucher_id}', '${row.expired_at}')">⏳ Waktu</button><button class="btn btn-primary btn-sm" style="width:100%; margin-bottom:5px;" onclick="editStatusVoucher('${row.voucher_id}', ${row.is_redeemed})">🔄 Status</button><button class="btn btn-danger btn-sm" style="width:100%;" onclick="hapusPesertaDariTabel('${row.nomor_bib}')">🗑️ Hapus</button></td></tr>`;
+            });
+        }
+
+        // --- AKSI VOUCHER TABEL & SCANNER ---
+        function bukaModalEditWaktu(voucherId, waktuLama) { document.getElementById('hiddenVoucherId').value = voucherId; document.getElementById('inputWaktuBaru').value = waktuLama.slice(0,16); document.getElementById('modalEditWaktu').style.display = 'flex'; }
+        function tutupModalWaktu() { document.getElementById('modalEditWaktu').style.display = 'none'; }
+        async function simpanWaktuBaru() { const vId = document.getElementById('hiddenVoucherId').value; const nTime = document.getElementById('inputWaktuBaru').value; if (!nTime) return; await fetch(`${API_BASE}/voucher/time`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ voucher_id: vId, new_time: new Date(nTime).toISOString() }) }); tutupModalWaktu(); Swal.fire({title: 'Waktu Diperbarui', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000}); tarikDataDashboard(); }
+        
+        async function editStatusVoucher(vId, currStatus) { 
+            const result = await Swal.fire({ title: currStatus ? "Ubah kembali jadi VALID?" : "Tandai sebagai TERPAKAI?", icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#6c757d', confirmButtonText: 'Ya, Ubah!' });
+            if (result.isConfirmed) { await fetch(`${API_BASE}/voucher/status`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ voucher_id: vId, status: !currStatus }) }); Swal.fire({title: 'Status Diperbarui', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000}); } 
+        }
+        
+        async function hapusPesertaDariTabel(bib) { 
+            const result = await Swal.fire({ title: `Yakin hapus permanen peserta ini?`, text: "Data voucher terkait juga akan ikut terhapus.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, Hapus!' });
+            if (result.isConfirmed) { await fetch(`${API_BASE}/peserta/${bib}`, { method: 'DELETE', headers: getAuthHeaders() }); Swal.fire('Terhapus!', 'Data peserta berhasil dihapus.', 'success'); } 
+        }
+
+        async function cekKeGolangManual() {
+            try { const res = await fetch(`${API_BASE}/scan?kode=${document.getElementById('inputScan').value}`, { headers: getAuthHeaders() }); const data = await res.json();
+                if (res.ok) { 
+                    document.getElementById('hasilScan').style.display = 'block'; document.getElementById('resNama').innerText = data.nama; document.getElementById('resBib').innerText = data.bib; document.getElementById('resLokasi').innerText = data.lokasi_treatment; window.activeVoucherId = data.voucher_id; const btn = document.getElementById('btnRedeem'); const statusEl = document.getElementById('resStatus'); 
+                    let strExp = data.expired_at; if(!strExp.includes("+")) strExp += "+08:00";
+                    if (data.is_redeemed) { statusEl.innerText = "❌ SUDAH DIPAKAI"; statusEl.style.color = "red"; btn.style.display = 'none'; } else if (new Date() > new Date(strExp)) { statusEl.innerText = "⚠️ EXPIRED"; statusEl.style.color = "orange"; btn.style.display = 'none'; } else { statusEl.innerText = "✅ VALID"; statusEl.style.color = "green"; btn.style.display = 'block'; } 
+                } else Swal.fire('Tidak Ditemukan', 'Kode atau BIB tidak ada dalam database.', 'error');
+            } catch (e) { Swal.fire('Error', 'Server error.', 'error'); }
+        }
+        
+        async function tandaiDipakai() { await fetch(`${API_BASE}/redeem`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ voucher_id: window.activeVoucherId }) }); Swal.fire({title: 'Berhasil Ditukar!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000}); cekKeGolangManual(); }
+        function mulaiScanner() { document.getElementById('reader').style.display = 'block'; document.getElementById('btnStartScan').style.display = 'none'; document.getElementById('btnStopScan').style.display = 'block'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { matikanScanner(); document.getElementById('inputScan').value = text; cekKeGolangManual(); }); }
+        function matikanScanner() { if (html5QrCode) html5QrCode.stop().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('btnStartScan').style.display = 'block'; document.getElementById('btnStopScan').style.display = 'none'; }); }
+
+        function exportExcel() { const dataToExport = getFilteredData().map(r => ({ "Event": r.event_nama, "Nama": r.nama_lengkap, "BIB": r.nomor_bib, "Lokasi": r.lokasi_treatment, "Kode": r.kode_voucher, "Waktu Klaim": r.claim_at.replace("T", " "), "Status": r.is_redeemed ? "TERPAKAI" : "VALID" })); const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Data"); XLSX.writeFile(wb, "Rekap.xlsx"); }
+        function exportPDF() { const doc = new window.jspdf.jsPDF('l'); const ev = document.getElementById('filterEvent').value === "ALL" ? "Semua Event" : document.getElementById('filterEvent').value; doc.text(`Laporan Voucher - ${ev}`, 14, 15); doc.autoTable({ head: [['No', 'Event', 'Nama', 'BIB', 'Lokasi', 'Kode', 'Status']], body: getFilteredData().map((r, i) => [i + 1, r.event_nama, r.nama_lengkap, r.nomor_bib, r.lokasi_treatment, r.kode_voucher, r.is_redeemed ? "TERPAKAI" : "VALID"]), startY: 20 }); doc.save("Rekap.pdf"); }
+        async function loginKeGolang() { const res = await fetch(`${API_BASE}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value }) }); const data = await res.json(); if (res.ok) { localStorage.setItem("jwt_token", data.token); window.location.reload(); } else Swal.fire('Gagal Login', data.error, 'error'); }
+        function logout() { localStorage.removeItem("jwt_token"); window.location.reload(); }
+    </script>
+</body>
+</html>
