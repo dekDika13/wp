@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Event & Voucher - Analgesia Pain Clinic</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#034b72">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { --primary-color: #034b72; --secondary-color: #002842; --accent-color: #0d8ca8; --bg-color: #f4f6f9; --text-main: #2d3748; --text-light: #718096; --bg-gray: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box; transition: background 0.5s ease; }
+        .navbar { background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .navbar-brand { font-size: 18px; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
+        .main-container { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
+        .v-portal-container { width: 100%; max-width: 800px; display: none; }
+        .v-form-container { width: 100%; max-width: 450px; display: none; margin: 0 auto; }
+        .v-hero-banner { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 16px; padding: 40px 30px; text-align: center; color: white; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(3, 75, 114, 0.2); }
+        .v-hero-banner h1 { margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: white;}
+        .v-hero-banner p { margin: 0; font-size: 15px; opacity: 0.9; max-width: 600px; margin: 0 auto; line-height: 1.5;}
+        .v-section-title { font-size: 18px; font-weight: 700; margin: 0 0 15px 0; color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;}
+        .v-event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px;}
+        .event-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: white; position: relative; overflow: hidden; text-align: left; cursor: pointer; transition: all 0.3s; }
+        .event-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--primary-color); }
+        .event-card:hover { border-color: var(--primary-color); box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-3px); }
+        .event-card h3 { margin: 0 0 8px 0; color: var(--text-main); font-size: 18px;}
+        .event-card p { margin: 0; font-size: 13px; color: var(--text-light);}
+        .event-card.past-event { cursor: default; opacity: 0.7; filter: grayscale(100%); }
+        .event-card.past-event:hover { border-color: #e2e8f0; box-shadow: none; transform: none; }
+        .event-card.past-event::before { background: #cbd5e0; }
+        .v-card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box;}
+        .v-form-group { margin-bottom: 18px; text-align: left; }
+        label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 8px; color: var(--text-main);}
+        input, select { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.2s; background: white; box-sizing: border-box;}
+        input:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(3, 75, 114, 0.1); }
+        .v-btn { width: 100%; padding: 14px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 10px; transition: 0.2s; font-family: inherit; box-sizing: border-box;}
+        .v-btn:hover { background: var(--secondary-color); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .v-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+        .v-btn-outline { background: transparent !important; color: var(--primary-color); border: 2px solid var(--primary-color); }
+        .v-btn-outline:hover { background: var(--bg-gray) !important; }
+        .voucher-ui { text-align: center; border-radius: 12px; overflow: hidden; background: white;}
+        .v-header { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; padding: 25px 20px; }
+        .qr-container { display: flex; justify-content: center; margin: 25px 0 15px 0; padding: 15px; transition: 0.3s; }
+        .timer-box { background: var(--bg-gray); padding: 15px; border-radius: 8px; margin: 0 20px 20px 20px; border: 1px solid #e2e8f0;}
+        .timer-text { font-size: 28px; font-weight: 700; color: #e53e3e; font-family: monospace; letter-spacing: 2px;}
+        .info-table { width: 100%; padding: 0 20px; margin: 10px auto 20px auto; text-align: left; font-size: 14px; border-collapse: collapse; }
+        .info-table td { padding: 10px 0; border-bottom: 1px solid #edf2f7; }
+        .footer { text-align: center; padding: 20px; font-size: 13px; color: var(--text-light); background: white; border-top: 1px solid #e2e8f0; margin-top: auto;}
+        div:where(.swal2-container) { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+
+        <div id="v-loadingSection" style="text-align: center; padding: 50px 20px; width: 100%;">
+            <h3 style="color: var(--text-light); margin:0;">Memuat Portal Event... ⏳</h3>
+        </div>
+
+        <div class="v-portal-container" id="v-portalSection">
+            <div class="v-hero-banner">
+                <h1>Analgesia Event Portal</h1>
+                <p>Dukung gaya hidup aktif Anda dan bergerak bebas tanpa nyeri. Pilih event di bawah ini untuk mengklaim atau mengecek voucher finisher Anda dari Analgesia Pain Clinic.</p>
+            </div>
+            
+            <div id="activeSection" style="display: none;">
+                <h3 class="v-section-title">🏃‍♂️ Sedang Berlangsung</h3>
+                <div id="v-activeEventsContainer" class="v-event-grid"></div>
+            </div>
+            
+            <div id="upcomingSection" style="display: none; margin-top: 40px;">
+                <h3 class="v-section-title" style="color: #d97706;">⏳ Akan Datang</h3>
+                <div id="v-upcomingEventsContainer" class="v-event-grid"></div>
+            </div>
+
+            <div id="pastSection" style="display: none; margin-top: 40px;">
+                <h3 class="v-section-title" style="color: var(--text-light);">🏁 Telah Berlalu</h3>
+                <div id="v-pastEventsContainer" class="v-event-grid"></div>
+            </div>
+        </div>
+
+        <div class="v-form-container v-card" id="v-actionSection">
+            
+            <div id="v-formSection">
+                <button onclick="kembaliKePortal()" style="background: none; border: none; color: var(--text-light); font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 20px; padding: 0; display: flex; align-items: center; gap: 5px;">← Kembali ke Portal</button>
+                <h2 id="v-judulEvent" style="margin-top: 0; margin-bottom: 25px; color: var(--primary-color); text-align: center;">Klaim Voucher</h2>
+                
+                <div class="v-form-group"><label>Nama Lengkap</label><input type="text" id="regNama" placeholder="Sesuai identitas"></div>
+                <div class="v-form-group" id="containerBib"><label>Nomor BIB (Dada)</label><input type="text" id="regBib" placeholder="Contoh: 1024"></div>
+                <div class="v-form-group"><label>Nomor WhatsApp</label><input type="number" id="regHp" placeholder="08xxxxxxxxx"></div>
+                <div class="v-form-group"><label>Pilih Lokasi Treatment</label><select id="regLokasi"><option value="">-- Pilih Lokasi --</option></select></div>
+                
+                <button class="v-btn" id="btnKlaimUtama" onclick="daftarVoucher()">Klaim Voucher Saya</button>
+                <div style="text-align: center; margin: 15px 0; color: var(--text-light); font-size: 14px;">Atau</div>
+                <button class="v-btn v-btn-outline" id="btnCekLama" onclick="cekVoucherLama()">Cek Voucher Tersimpan</button>
+            </div>
+
+            <div id="v-voucherSection" class="voucher-ui" style="display: none;">
+                <div class="v-header" id="headerVoucher"><h2 style="margin:0; font-size: 20px;" id="judulVoucherWeb">VOUCHER FINISHER</h2><p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Analgesia Pain Clinic</p></div>
+                <div class="qr-container" id="qrcode"></div>
+                <p style="margin: 0; color: var(--text-light); font-size: 13px;">KODE ID: <strong id="valKode" style="color: var(--text-main);"></strong></p>
+                <div class="timer-box"><div style="font-size: 12px; color: var(--text-light); margin-bottom: 8px; font-weight: 600; text-transform: uppercase;">Sisa Waktu Penukaran</div><div class="timer-text" id="liveTimer">00:00:00</div><div id="waktuBatasText" style="font-size: 12px; color: var(--text-main); margin-top: 12px; border-top: 1px dashed #cbd5e0; padding-top: 10px; font-weight: 500;"></div></div>
+                <table class="info-table">
+                    <tr><td style="width: 35%; font-weight: 600; color: var(--text-light);">Nama</td><td style="font-weight: 600;">: <span id="valNama"></span></td></tr>
+                    <tr id="rowValBib"><td style="font-weight: 600; color: var(--text-light);">No. BIB</td><td style="font-weight: 600;">: <span id="valBib"></span></td></tr>
+                    <tr><td style="font-weight: 600; color: var(--text-light);">Lokasi</td><td style="font-weight: 700;">: <span id="valLokasi" style="color: var(--primary-color);"></span> <br><a href="#" id="linkGmap" target="_blank" style="font-size:12px; display:none; color: #3182ce; text-decoration: none; margin-top: 4px; display: inline-block;">📍 Buka Google Maps</a></td></tr>
+                </table>
+                <div style="padding: 0 20px 20px 20px;"><button class="v-btn v-btn-outline" style="width: 100%;" id="btnTutupVoucher" onclick="kembaliKeForm()">Tutup Voucher</button></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+        © 2026 Analgesia Pain Clinic. All rights reserved.<br>
+        <span style="font-size: 11px; opacity: 0.7;">Pain Management & Physiotherapy Care | System developed by <a href="https://agencyta.biz.id" target="_blank" style="color: inherit; text-decoration: none; font-weight: 600;">Kadek Dika Rama Suryadi</a></span>
+    </footer>
+
+    <script>
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        }
+    </script>
+
+    <script>
+        const API_BASE = "https://clinik.agencyta.biz.id/api";
+        let timerInterval; let sseSource = null; let currentUserBib = ""; let currentUserHp = ""; let activeEventData = null; let allEvents = []; 
+
+        function getThemeColor() { return getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#034b72'; }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const res = await fetch(`${API_BASE}/events`);
+                if (res.ok) { 
+                    allEvents = await res.json(); 
+                    document.getElementById('v-loadingSection').style.display = 'none';
+                    tampilkanPortal();
+                } 
+            } catch (err) { document.getElementById('v-loadingSection').innerHTML = "<h3 style='color:#e53e3e;'>Gagal terhubung ke server.</h3>"; }
+        });
+
+        function tampilkanPortal() {
+            document.body.style.background = "var(--bg-color)";
+            document.documentElement.style.setProperty('--primary-color', '#034b72'); 
+            
+            document.getElementById('v-actionSection').style.display = 'none';
+            document.getElementById('v-portalSection').style.display = 'block';
+            
+            const activeContainer = document.getElementById('v-activeEventsContainer');
+            const upcomingContainer = document.getElementById('v-upcomingEventsContainer');
+            const pastContainer = document.getElementById('v-pastEventsContainer');
+            
+            const activeSection = document.getElementById('activeSection');
+            const upcomingSection = document.getElementById('upcomingSection');
+            const pastSection = document.getElementById('pastSection');
+            
+            activeContainer.innerHTML = ""; upcomingContainer.innerHTML = ""; pastContainer.innerHTML = "";
+            let hasActive = false; let hasUpcoming = false; let hasPast = false;
+            
+            const now = new Date();
+
+            allEvents.forEach(ev => {
+                let strStart = ev.start_waktu_claim; if(!strStart.includes("+")) strStart += "+08:00";
+                let strEnd = ev.batas_waktu_claim; if(!strEnd.includes("+")) strEnd += "+08:00";
+                
+                const startDate = new Date(strStart);
+                const endDate = new Date(strEnd);
+                
+                const startBagus = ev.start_waktu_claim.replace("T", " ");
+                const endBagus = ev.batas_waktu_claim.replace("T", " ");
+
+                // Logika Pembagian Event
+                if (!ev.is_active || now > endDate) {
+                    hasPast = true;
+                    pastContainer.innerHTML += `<div class="event-card past-event" onclick="infoPastEvent()"><h3>${ev.judul}</h3><p>🏁 Event telah selesai</p></div>`;
+                } else if (now < startDate) {
+                    hasUpcoming = true;
+                    upcomingContainer.innerHTML += `<div class="event-card" onclick='infoUpcomingEvent("${startBagus}")' style="border-left-color: #d97706;"><h3>${ev.judul}</h3><p>Mulai: ${startBagus} WITA</p></div>`;
+                } else {
+                    hasActive = true;
+                    activeContainer.innerHTML += `<div class="event-card" onclick='pilihEvent(${JSON.stringify(ev)})'><h3>${ev.judul}</h3><p>⏱️ Batas Klaim: ${endBagus} WITA</p></div>`;
+                }
+            });
+
+            activeSection.style.display = hasActive ? 'block' : 'none';
+            upcomingSection.style.display = hasUpcoming ? 'block' : 'none';
+            pastSection.style.display = hasPast ? 'block' : 'none';
+            
+            if(!hasActive && !hasUpcoming && !hasPast) {
+                document.getElementById('v-portalSection').innerHTML += `<div style="text-align: center; padding: 20px;"><p>Belum ada event sama sekali.</p></div>`;
+            }
+        }
+
+        function infoPastEvent() { Swal.fire({ icon: 'info', title: 'Event Selesai', text: 'Event ini telah berakhir dan penukaran voucher ditutup.', confirmButtonColor: getThemeColor() }); }
+        
+        function infoUpcomingEvent(waktuBuka) { 
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Klaim Belum Dibuka', 
+                text: `Sesi pendaftaran dan klaim voucher untuk event ini baru akan dibuka pada: ${waktuBuka} WITA.`, 
+                confirmButtonColor: '#d97706' 
+            }); 
+        }
+
+        function pilihEvent(ev) {
+            activeEventData = ev;
+            document.getElementById('v-portalSection').style.display = 'none';
+            document.getElementById('v-actionSection').style.display = 'block';
+            document.getElementById('v-formSection').style.display = 'block';
+            terapkanTemaEvent(ev);
+        }
+
+        function kembaliKePortal() {
+            document.getElementById('regNama').value = ""; document.getElementById('regBib').value = ""; document.getElementById('regHp').value = "";
+            activeEventData = null; document.getElementById('v-voucherSection').style.display = 'none'; tampilkanPortal();
+        }
+
+        function terapkanTemaEvent(ev) {
+            document.getElementById('v-judulEvent').innerText = ev.judul; 
+            document.getElementById('judulVoucherWeb').innerText = ev.judul;
+            
+            if(ev.is_require_bib === false) { document.getElementById('containerBib').style.display = 'none'; document.getElementById('rowValBib').style.display = 'none'; } 
+            else { document.getElementById('containerBib').style.display = 'block'; document.getElementById('rowValBib').style.display = 'table-row'; }
+
+            if (ev.background) { document.body.style.background = `url('${ev.background}') no-repeat center center fixed`; document.body.style.backgroundSize = "cover"; }
+            if (ev.tone_color) { document.documentElement.style.setProperty('--primary-color', ev.tone_color); }
+            
+            const selectLokasi = document.getElementById('regLokasi'); selectLokasi.innerHTML = `<option value="">-- Pilih Lokasi Pengambilan --</option>`;
+            if(ev.cabang_lokasi) ev.cabang_lokasi.forEach(cabang => { selectLokasi.innerHTML += `<option value="${cabang.nama}">${cabang.nama}</option>`; });
+        }
+
+        async function daftarVoucher() {
+            const payload = { nama_lengkap: document.getElementById('regNama').value, nomor_bib: document.getElementById('regBib').value, nomor_hp: document.getElementById('regHp').value, lokasi_treatment: document.getElementById('regLokasi').value, event_id: activeEventData.id };
+            if (!payload.nama_lengkap || !payload.nomor_hp || !payload.lokasi_treatment || (activeEventData.is_require_bib && !payload.nomor_bib)) { return Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Harap lengkapi form pendaftaran dengan benar!', confirmButtonColor: getThemeColor() }); }
+            
+            const btn = document.getElementById('btnKlaimUtama'); btn.innerText = "Memproses..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/claim`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json(); 
+                if (res.ok) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Voucher disiapkan...', showConfirmButton: false, timer: 1500 }); tarikDataVoucher(payload.nomor_bib, payload.nomor_hp); } 
+                else { Swal.fire({ icon: 'error', title: 'Pendaftaran Ditolak', text: data.error, confirmButtonColor: getThemeColor() }); btn.innerText = "Klaim Voucher Saya"; btn.disabled = false; }
+            } catch (err) { Swal.fire({ icon: 'error', title: 'Koneksi Terputus', text: 'Gagal terhubung ke server.', confirmButtonColor: getThemeColor() }); btn.innerText = "Klaim Voucher Saya"; btn.disabled = false; }
+        }
+
+        function cekVoucherLama() {
+            const bib = document.getElementById('regBib').value; const hp = document.getElementById('regHp').value;
+            if (!hp || (activeEventData.is_require_bib && !bib)) { return Swal.fire({ icon: 'info', title: 'Perhatian', text: 'Mohon lengkapi data untuk mengecek voucher!', confirmButtonColor: getThemeColor() }); }
+            tarikDataVoucher(bib, hp);
+        }
+
+        async function tarikDataVoucher(bib, hp) {
+            try {
+                const evId = activeEventData.id;
+                const res = await fetch(`${API_BASE}/voucher?event_id=${evId}&bib=${bib}&hp=${hp}`); const data = await res.json();
+                if (res.ok) { currentUserBib = bib; currentUserHp = hp; tampilkanVoucher(data); } 
+                else { Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: data.error, confirmButtonColor: getThemeColor() }); }
+            } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal memuat data.', confirmButtonColor: getThemeColor() }); }
+        }
+
+        function tampilkanVoucher(data) {
+            document.getElementById('v-formSection').style.display = 'none'; document.getElementById('v-voucherSection').style.display = 'block';
+            document.getElementById('valNama').innerText = data.nama; document.getElementById('valBib').innerText = data.bib; 
+            document.getElementById('valKode').innerText = data.kode_voucher; document.getElementById('valLokasi').innerText = data.lokasi_treatment;
+            
+            if(data.bib === "-" || !activeEventData.is_require_bib) { document.getElementById('rowValBib').style.display = 'none'; }
+            
+            const linkEl = document.getElementById('linkGmap'); linkEl.style.display = "none";
+            if(activeEventData && activeEventData.cabang_lokasi) { const lokasiDipilih = activeEventData.cabang_lokasi.find(c => c.nama === data.lokasi_treatment); if(lokasiDipilih && lokasiDipilih.gmap) { linkEl.href = lokasiDipilih.gmap; linkEl.style.display = "inline-block"; } }
+            
+            const qrContainer = document.getElementById('qrcode'); qrContainer.innerHTML = ""; new QRCode(qrContainer, { text: data.kode_voucher, width: 160, height: 160, colorDark : "#2d3748", colorLight : "#ffffff" });
+            
+            clearInterval(timerInterval); jalankanTimer(data.expired_at, data.is_redeemed); aktifkanLiveUpdatePeserta();
+        }
+
+        function aktifkanLiveUpdatePeserta() {
+            if (sseSource) sseSource.close();
+            sseSource = new EventSource(`${API_BASE}/peserta/stream`);
+            sseSource.onmessage = function (event) { if (event.data === "refresh") { if (currentUserHp) { refreshDataSenyap(currentUserBib, currentUserHp); } } };
+        }
+
+        async function refreshDataSenyap(bib, hp) {
+            try { const evId = activeEventData.id; const res = await fetch(`${API_BASE}/voucher?event_id=${evId}&bib=${bib}&hp=${hp}`); const data = await res.json(); if (res.ok) { clearInterval(timerInterval); jalankanTimer(data.expired_at, data.is_redeemed); } } catch (err) {}
+        }
+
+        function jalankanTimer(waktuExpired, isRedeemed) {
+            const elemenTimer = document.getElementById('liveTimer'); const qrElement = document.getElementById('qrcode'); const elemenWaktuText = document.getElementById('waktuBatasText');
+            let strWaktu = waktuExpired; if (!strWaktu.includes("+")) strWaktu += "+08:00"; const targetDate = new Date(strWaktu);
+            const opsiFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            elemenWaktuText.innerText = "Berlaku hingga:\n" + targetDate.toLocaleDateString('id-ID', opsiFormat) + " WITA";
+
+            if (isRedeemed) { elemenTimer.innerText = "SUDAH DIPAKAI"; elemenTimer.style.color = "#e53e3e"; qrElement.style.opacity = "0.2"; return; 
+            } else { qrElement.style.opacity = "1"; elemenTimer.style.color = "var(--primary-color)"; }
+
+            timerInterval = setInterval(() => {
+                const selisih = targetDate.getTime() - new Date().getTime();
+                if (selisih < 0) { clearInterval(timerInterval); elemenTimer.innerText = "EXPIRED"; elemenTimer.style.color = "#e53e3e"; qrElement.style.opacity = "0.2"; return; }
+                const jam = Math.floor(selisih / (1000 * 60 * 60)); const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60)); const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+                elemenTimer.innerText = `${String(jam).padStart(2, '0')}:${String(menit).padStart(2, '0')}:${String(detik).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function kembaliKeForm() { const btn = document.getElementById('btnKlaimUtama'); btn.innerText = "Klaim Voucher Saya"; btn.disabled = false; document.getElementById('v-formSection').style.display = 'block'; document.getElementById('v-voucherSection').style.display = 'none'; clearInterval(timerInterval); if (sseSource) { sseSource.close(); sseSource = null; } }
+    </script>
+</body>
+</html>
